@@ -33,4 +33,4 @@ Real-time product suggestions as you type
 
 No page reloads, smooth user experience
 
-This is an ongoing project. Soon there will be an Admin Dashboard to manage products and an improved Stripe Payment Gateway integration.
+This is an ongoing project. Soon there will be an Admin Dashboard to manage products.
