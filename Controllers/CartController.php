@@ -1,5 +1,4 @@
-<?php
-
+?php
 namespace App\Controllers;
 
 use CodeIgniter\Controller;
@@ -10,26 +9,46 @@ class CartController extends Controller
     // Add product to cart
     public function addToCart($productId)
     {
-        $cart = session()->get('cart') ?? [];
-        $cart[$productId] = true;
-        session()->set('cart', $cart);
+        $productModel = new ProductModel();
+        $product = $productModel->find($productId);
 
+        if (!$product) {
+            return redirect()->back()->with('error', 'Product not found.');
+        }
+
+        $cart = session()->get('cart') ?? [];
+
+        if (isset($cart[$productId])) {
+            $cart[$productId]['quantity'] += 1; // Increment quantity
+        } else {
+            $cart[$productId] = [
+                'id' => $product['id'],
+                'name' => $product['productname'],
+                'price' => $product['price'],
+                'image' => $product['image'], // Add image here
+                'quantity' => 1
+            ];
+        }
+
+        session()->set('cart', $cart);
         return redirect()->back()->with('success', 'Product added to cart.');
     }
 
     // View cart
     public function viewCart()
     {
-        $productModel = new ProductModel();
         $cart = session()->get('cart') ?? [];
-        $productIds = array_keys($cart);
+        return view('cart_view', ['cart' => $cart]);
+    }
 
-        if (empty($productIds)) {
-            $productsInCart = [];
-        } else {
-            $productsInCart = $productModel->whereIn('id', $productIds)->findAll();
+    // Remove item from cart
+    public function removeFromCart($productId)
+    {
+        $cart = session()->get('cart') ?? [];
+        if (isset($cart[$productId])) {
+            unset($cart[$productId]);
+            session()->set('cart', $cart);
         }
-
-        return view('cart_view', ['productsInCart' => $productsInCart]);
+        return redirect()->back();
     }
 }
