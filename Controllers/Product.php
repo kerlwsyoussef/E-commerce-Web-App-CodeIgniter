@@ -67,15 +67,13 @@ class Product extends Controller
         $session = session();
         $cart = $session->get('cart') ?? [];
     
-        // Assuming $cart items have 'image' field with correct paths
+        // Ensure every item has an image, fallback if missing
         foreach ($cart as &$item) {
-            // Adjust image path based on your file structure
-            $item['image'] = base_url('public/' . $item['image']);
+            $item['image'] = isset($item['image']) ? base_url('public/' . $item['image']) : base_url('public/default.png');
         }
     
         echo view('templates/header');
         echo view('cart_view', ['cart' => $cart]);
-        ;
     }
     
 
@@ -110,3 +108,4 @@ class Product extends Controller
        
     }
 }
+
