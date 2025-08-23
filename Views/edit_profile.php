@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
   <style>
-    /* ========= DASHBOARD-LIKE EDIT PROFILE PAGE ========= */
+    
     .profile-page {
       padding: 40px 15px;
       background: #ffffff;
@@ -192,4 +192,5 @@
 
 </body>
 </html>
+
 
