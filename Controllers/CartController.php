@@ -1,54 +1,92 @@
-?php
+<?php
+
 namespace App\Controllers;
 
 use CodeIgniter\Controller;
-use App\Models\ProductModel;
 
 class CartController extends Controller
 {
-    // Add product to cart
-    public function addToCart($productId)
-    {
-        $productModel = new ProductModel();
-        $product = $productModel->find($productId);
+    protected $session;
 
-        if (!$product) {
-            return redirect()->back()->with('error', 'Product not found.');
+    public function __construct()
+    {
+        $this->session = session();
+    }
+
+    /** Show cart */
+    public function index()
+    {
+        $cart = $this->session->get('cart') ?? [];
+        return view('cart/index', ['cart' => $cart]);
+    }
+
+    /** Add item to cart */
+    public function addToCart()
+    {
+        $id       = $this->request->getPost('id');
+        $name     = $this->request->getPost('name');
+        $price    = (float) $this->request->getPost('price');
+        $quantity = max(1, (int) $this->request->getPost('quantity'));
+        $image    = $this->request->getPost('image') ?: 'default.png';
+        $image    = basename($image);
+
+        // Use public/images folder
+        $imagePath = 'images/' . $image;
+        if (!file_exists(FCPATH . $imagePath)) {
+            $imagePath = 'images/default.png';
         }
 
-        $cart = session()->get('cart') ?? [];
-
-        if (isset($cart[$productId])) {
-            $cart[$productId]['quantity'] += 1; // Increment quantity
+        $cart = $this->session->get('cart') ?? [];
+        if (isset($cart[$id])) {
+            $cart[$id]['quantity'] += $quantity;
         } else {
-            $cart[$productId] = [
-                'id' => $product['id'],
-                'name' => $product['productname'],
-                'price' => $product['price'],
-                'image' => $product['image'], // Add image here
-                'quantity' => 1
-            ];
+            $cart[$id] = compact('id', 'name', 'price', 'quantity') + ['image' => $imagePath];
         }
 
-        session()->set('cart', $cart);
-        return redirect()->back()->with('success', 'Product added to cart.');
+        $this->session->set('cart', $cart);
+
+        return $this->response->setJSON(['success' => true, 'cart' => $cart]);
     }
 
-    // View cart
-    public function viewCart()
+    /** Update single item qty */
+    public function updateCartQty($id)
     {
-        $cart = session()->get('cart') ?? [];
-        return view('cart_view', ['cart' => $cart]);
-    }
+        $data = $this->request->getJSON(true);
+        $qty  = max(1, (int) ($data['quantity'] ?? 1));
 
-    // Remove item from cart
-    public function removeFromCart($productId)
-    {
-        $cart = session()->get('cart') ?? [];
-        if (isset($cart[$productId])) {
-            unset($cart[$productId]);
-            session()->set('cart', $cart);
+        $cart = $this->session->get('cart') ?? [];
+        if (isset($cart[$id])) {
+            $cart[$id]['quantity'] = $qty;
         }
-        return redirect()->back();
+
+        $this->session->set('cart', $cart);
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    /** Remove item */
+    public function removeFromCart($id)
+    {
+        $cart = $this->session->get('cart') ?? [];
+        unset($cart[$id]);
+        $this->session->set('cart', $cart);
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    public function cartCount()
+{
+    $cart = session()->get('cart') ?? [];
+    $count = 0;
+    foreach ($cart as $item) {
+        $count += $item['quantity'];
+    }
+    return $this->response->setJSON(['count' => $count]);
+}
+
+    public function clearCart()
+    {
+        $this->session->remove('cart');
+        return $this->response->setJSON(['success' => true]);
     }
 }
+
+
